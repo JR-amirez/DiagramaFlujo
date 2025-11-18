@@ -1,0 +1,543 @@
+.header-game {
+    height: 15%;
+}
+
+.toolbar-game {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    padding-bottom: 25px;
+    align-items: center;
+}
+
+.header-game .toolbar-game span {
+    color: #0000005b;
+    font-size: 13px;
+}
+
+.header-game .toolbar-game .titles {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.header-game .toolbar-game .titles h1 {
+    text-align: center;
+    height: fit-content;
+    margin: 0;
+    font-size: 50px;
+    font-weight: bold;
+    color: #1a4dbd;
+}
+
+.header-game .toolbar-game .titles ion-icon {
+    color: #1a4dbd;
+}
+
+.filter-card {
+    border-radius: 12px;
+    overflow: hidden;
+    --background: #ffffff;
+}
+
+.filter-card .section {
+    padding: 16px 20px;
+    color: #000;
+}
+
+.filter-card .section:not(:last-child) {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.filter-card .header-section h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    color: #1a4dbd;
+}
+
+.filter-card .description-section p {
+    margin: 0;
+    text-align: center;
+    line-height: 1.5;
+    color: #424242;
+}
+
+.filter-card .footer-section {
+    text-align: center;
+}
+
+.filter-card .footer-section span {
+    font-size: 13px;
+    color: #666;
+}
+
+.juego-container {
+    width: 100%;
+    height: 85%;
+    padding: 0 16px 16px 16px;
+}
+
+/* Texto de instrucciones */
+.instructions {
+    color: #1a4dbd;
+    font-weight: bold;
+    animation: pulse 2s ease infinite;
+    height: 4%;
+}
+
+/* Barra superior: nº de juego y tiempo */
+.info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 5%;
+}
+
+.info .num-words {
+    text-align: center;
+    font-weight: bold;
+}
+
+.info .temporizador {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.info .temporizador .icono-tiempo {
+    font-size: 22px;
+    color: var(--ion-color-primary);
+}
+
+.info .temporizador .tiempo-display {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--ion-color-primary);
+    font-family: 'Courier New', monospace;
+}
+
+.info .tiempo-critico {
+    animation: parpadeo 1s infinite;
+}
+
+.tiempo-critico .icono-tiempo,
+.tiempo-critico .tiempo-display {
+    color: var(--ion-color-danger) !important;
+}
+
+/* Fondo de la pantalla */
+.flowchart-content {
+    height: 65%;
+    /* 74% */
+    --background: #f1f5f9;
+    /* gris muy claro */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.flowchart-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px 0;
+}
+
+.flowchart-title h5 {
+    margin: 0;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Contenedor del diagrama */
+.flowchart-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+    /* espacio entre elementos */
+}
+
+/* Inicio / Fin */
+.flow-node {
+    width: 40%;
+    padding: 10px 24px;
+    border-radius: 999px;
+    /* forma de píldora */
+    font-weight: 600;
+    text-align: center;
+    color: #ffffff;
+    background: #2563eb;
+    /* azul */
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.4);
+    font-size: 14px;
+}
+
+.flow-node-end {
+    background: #1d4ed8;
+    /* azul un poco más oscuro */
+}
+
+/* Flechas */
+.flow-arrow ion-icon {
+    font-size: 20px;
+    color: #64748b;
+    /* gris azulado */
+}
+
+/* Bloque base (rectangular) */
+.flow-slot {
+    width: 100%;
+    min-height: 54px;
+    background: #f8fafc;
+    border-radius: 5px;
+    border: 2px dashed #cbd5e1;
+    /* borde punteado */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+/* Estado de error cuando el orden del diagrama es incorrecto */
+.flow-slot-error {
+    background: #fee2e2;
+    /* rojo muy claro */
+    border-color: #ef4444;
+    /* borde rojo */
+    border-style: solid;
+}
+
+.flow-slot-error .flow-slot-inner {
+    color: #b91c1c;
+    /* texto rojo oscuro */
+    font-weight: 600;
+}
+
+/* Texto interno del bloque */
+.flow-slot-inner {
+    font-size: 14px;
+    color: #94a3b8;
+    text-align: center;
+    /* texto gris claro */
+}
+
+/* Paralelepípedos (los inclinados) */
+.flow-slot-parallelogram {
+    transform: skewX(-10deg);
+    /* inclina el bloque */
+}
+
+.flow-slot-parallelogram .flow-slot-inner {
+    transform: skewX(10deg);
+    /* corrige el texto para que quede recto */
+}
+
+/* Bloque central rectangular (sin inclinación extra) */
+.flow-slot-rect {
+    border-radius: 18px;
+}
+
+.options {
+    height: 26%;
+}
+
+.options-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 20%;
+    margin: 0;
+    text-align: center;
+    font-weight: bold;
+}
+
+.options-content {
+    height: 80%;
+    border: 1px solid #0000003a;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+    border-radius: 25px;
+    /* overflow: hidden;
+    overflow-y: scroll; */
+    overflow-y: auto;
+    padding: 15px;
+    gap: 10px;
+    background: #80808015;
+}
+
+.option-card {
+    width: 100%;
+    display: flex;
+    padding: 20px 0;
+    margin-bottom: 10px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 2px rgba(0, 0, 0, 0.2);
+}
+
+.option-card-selected {
+    border: 2px solid #1a4dbd;
+    box-shadow: 0 0 0 3px rgba(26, 77, 189, 0.4);
+}
+
+.option-card-inner {
+    cursor: pointer;
+    width: 100%;
+}
+
+.option-card-inner:active {
+    cursor: pointer;
+}
+
+.option-card-inner ion-item span {
+    width: 100%;
+    text-align: center;
+}
+
+.juego-container {
+    width: 100%;
+    height: 85%;
+    padding: 0 16px 16px 16px;
+    touch-action: auto;
+}
+
+/* ... lo demás igual ... */
+
+.drag-preview {
+    position: fixed;
+    /* relativo a la pantalla */
+    pointer-events: none;
+    /* que no interfiera con los toques */
+    z-index: 9999;
+    /* arriba de todo */
+    opacity: 0.9;
+    will-change: transform;
+    /* optimiza la animación de transform */
+}
+
+
+.ins-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+    padding: 20px;
+}
+
+.ins-card {
+    background: #fff;
+    border-radius: 18px;
+    width: min(520px, 92vw);
+    padding: 24px 22px;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.ins-title {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 22%;
+    color: #1a4dbd;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.ins-title-pre {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 22%;
+    color: #1a4dbd;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.ins-stats {
+    margin: 10px 0 18px 0;
+    font-size: 18px;
+    color: #222;
+}
+
+/* === OVERLAYS – estilo tipo Reorder/Ahorcado === */
+
+.victory-overlay,
+.defeat-overlay,
+.summary-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.5s ease;
+}
+
+/* Fondos según tipo */
+.victory-overlay {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.defeat-overlay {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.summary-overlay {
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+/* Mensajes centrales (cartas) */
+.victory-message,
+.defeat-message,
+.summary-message {
+    padding: 40px 60px;
+    border-radius: 20px;
+    text-align: center;
+    color: white;
+    animation: bounceIn 0.8s ease;
+    z-index: 1001;
+}
+
+/* Tipografía de títulos dentro de overlays */
+.victory-message h2,
+.defeat-message h2,
+.summary-message h2 {
+    font-size: 42px;
+    margin: 0 0 20px 0;
+}
+
+/* Título de victoria con efecto pulse */
+.victory-message h2 {
+    animation: pulse 1s infinite;
+}
+
+/* Texto dentro de overlays */
+.victory-message p,
+.defeat-message p,
+.summary-message p {
+    font-size: 20px;
+    margin: 8px 0;
+}
+
+/* Resumen final de resultados */
+.resumen-final {
+    padding: 0;
+}
+
+.resumen-final h3 {
+    margin-bottom: 16px;
+    font-size: 24px;
+}
+
+.resumen-final p {
+    margin: 10px 0;
+    font-size: 18px;
+}
+
+/* Estilo del badge en el resumen final */
+.summary-message ion-badge {
+    font-size: 22px;
+    font-weight: bold;
+    padding: 12px 24px;
+    margin-top: 16px;
+    border-radius: 25px;
+}
+
+/* === CONFETTI === */
+
+.confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+}
+
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    animation: caerConfetti linear infinite;
+    opacity: 0.8;
+}
+
+.flow-slot-selected {
+    outline: 3px solid #1e3a8a;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4);
+}
+
+/* === ANIMACIONES === */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    70% {
+        transform: scale(0.95);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes caerConfetti {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}

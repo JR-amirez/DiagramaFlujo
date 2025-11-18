@@ -1,0 +1,7 @@
+{
+  "name": "DiagramaFlujo",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}
