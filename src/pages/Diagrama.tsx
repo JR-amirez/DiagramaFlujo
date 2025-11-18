@@ -241,7 +241,7 @@ const diccionarioFlujo: DiccionarioFlujo = {
 
 type OrdenamientoProps = {
   nivel?: string;
-  problematicas?: ProblematicaFlujoId[]; // IDs que vienen desde el generador
+  problematicas?: ProblematicaFlujoId[];
   steps?: number;
 };
 
@@ -252,7 +252,6 @@ type SelectedSource =
   | { type: "slot"; index: number }
   | null;
 
-// Mezcla los elementos de un arreglo (Fisher–Yates)
 const shuffleArray = <T,>(array: T[]): T[] => {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
@@ -320,17 +319,12 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     return config.tiempoPorJuego * 60;
   });
   const [puntuacionTotal, setPuntuacionTotal] = useState(0);
-  // Indica si ya se terminaron todas las partidas del nivel
   const [juegoTerminado, setJuegoTerminado] = useState(false);
   const [juegosCompletados, setJuegosCompletados] = useState(0);
   const [juegosFallados, setJuegosFallados] = useState(0);
-
-  // Texto de retroalimentación (correcto / incorrecto / tiempo agotado)
   const [mensajeResultado, setMensajeResultado] = useState<string | null>(null);
-  // Indica si el juego actual ya fue completado correctamente
   const [juegoActualCompletado, setJuegoActualCompletado] = useState(false);
 
-  // Overlays de retroalimentación
   const [overlayFinJuego, setOverlayFinJuego] = useState<{
     abierto: boolean;
     puntosObtenidos: number;
@@ -344,15 +338,8 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
 
   const [overlayResumenFinal, setOverlayResumenFinal] =
     useState<boolean>(false);
-
-  // Escenarios disponibles para el nivel actual (básico / intermedio / avanzado)
   const escenariosNivelBase = diccionarioFlujo[nivelConfigKey];
 
-  /**
-   * Escenarios que realmente se jugarán, según las problemáticas que vengan por props.
-   * - Si `problematicas` viene con IDs, se toman SOLO esos escenarios, en ese orden.
-   * - Si no viene nada, se toman los primeros N escenarios según el nivel (3/4/5).
-   */
   const escenariosSeleccionados: EscenarioFlujo[] =
     problematicas && problematicas.length > 0
       ? problematicas
@@ -365,10 +352,8 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
           configuracionNiveles[nivelConfigKey].numeroJuegos
         );
 
-  // Número total de juegos que se jugarán en este nivel
   const totalJuegos = escenariosSeleccionados.length || 1;
 
-  // Escenario actual según el índice de juego
   const escenarioActual: EscenarioFlujo =
     escenariosSeleccionados[indiceJuegoActual] ||
     escenariosSeleccionados[0] ||
@@ -378,40 +363,28 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     shuffleArray(escenarioActual.bloquesOrdenados)
   );
 
-  // Contenido de cada slot del diagrama (null = vacío)
   const [slotsContent, setSlotsContent] = useState<(string | null)[]>(() =>
     Array(escenarioActual.bloquesOrdenados.length).fill(null)
   );
-  // Estado visual de cada slot (normal o error)
   const [slotEstados, setSlotEstados] = useState<("default" | "error")[]>(() =>
     Array(escenarioActual.bloquesOrdenados.length).fill("default")
   );
-  // Paso / slot actualmente seleccionado para colocar
   const [seleccion, setSeleccion] = useState<SelectedSource>(null);
 
   useEffect(() => {
-    // 1. Cada vez que cambie el escenarioActual, mezclamos de nuevo los bloques
     setBloquesDesordenados(shuffleArray(escenarioActual.bloquesOrdenados));
 
-    // 2. Reiniciamos los slots a null con el tamaño correcto
     setSlotsContent(Array(escenarioActual.bloquesOrdenados.length).fill(null));
 
-    // 3. Restauramos el color de todos los slots
     setSlotEstados(
       Array(escenarioActual.bloquesOrdenados.length).fill("default")
     );
   }, [escenarioActual.id]);
 
-  // Cada vez que cambiamos de juego, restablecemos el estado de completado
   useEffect(() => {
     setJuegoActualCompletado(false);
   }, [indiceJuegoActual]);
 
-  /**
-   * Comprueba si el diagrama está correctamente ordenado.
-   * - Si es incorrecto: muestra mensaje, pero deja que el jugador siga moviendo mientras haya tiempo.
-   * - Si es correcto: suma puntos y pasa a la siguiente partida (o termina el nivel).
-   */
   const handleComprobarResultado = () => {
     if (juegoTerminado || tiempoRestante <= 0 || juegoActualCompletado) {
       return;
@@ -425,7 +398,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     );
 
     if (!esCorrecto) {
-      // Aquí SOLO marcas de rojo, NO terminas el juego
       setSlotEstados(
         escenarioActual.bloquesOrdenados.map((_, index) => {
           const valorSlot = slotsContent[index];
@@ -438,7 +410,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
       return;
     }
 
-    // ✅ Si es correcto, ahí sí marcas completado
     setSlotEstados((prev) => prev.map(() => "default"));
 
     const puntosObtenidos = config.puntosPorJuego;
@@ -452,9 +423,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     });
   };
 
-  /**
-   * Avanza al siguiente juego o, si era el último, muestra el resumen final.
-   */
   const avanzarAlSiguienteJuego = () => {
     const esUltimoJuego = indiceJuegoActual + 1 >= totalJuegos;
 
@@ -469,37 +437,21 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     setMensajeResultado(null);
   };
 
-  /**
-   * Cierra el overlay de fin de juego y avanza.
-   */
   const handleCerrarOverlayFinJuego = () => {
     setOverlayFinJuego((prev) => ({ ...prev, abierto: false }));
     avanzarAlSiguienteJuego();
   };
 
-  /**
-   * Cierra el overlay de tiempo agotado y avanza.
-   */
   const handleCerrarOverlayTiempoAgotado = () => {
     setOverlayTiempoAgotado(false);
     avanzarAlSiguienteJuego();
   };
 
-  /**
-   * Cierra el overlay de resumen final.
-   */
   const handleCerrarOverlayResumenFinal = () => {
     setOverlayResumenFinal(false);
   };
 
-  /**
-   * Temporizador: descuenta 1 segundo cada 1000 ms mientras:
-   * - haya tiempo (> 0)
-   * - el nivel no haya terminado
-   */
   useEffect(() => {
-    // Si el juego ya terminó, el tiempo llegó a 0
-    // o hay un overlay de resultado abierto, no avanzamos el tiempo
     if (
       juegoTerminado ||
       tiempoRestante <= 0 ||
@@ -519,7 +471,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
       });
     }, 1000);
 
-    // Limpieza del intervalo al desmontar o al cambiar dependencias
     return () => clearInterval(intervalId);
   }, [
     juegoTerminado,
@@ -528,11 +479,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     overlayTiempoAgotado,
   ]);
 
-  /**
-   * Cada vez que cambian los slots:
-   * - Si todos están llenos y hay tiempo → se llama a handleComprobarResultado().
-   * - Si hay huecos, no hace nada (todavía no está listo el diagrama).
-   */
   useEffect(() => {
     if (juegoTerminado || tiempoRestante <= 0) {
       return;
@@ -543,14 +489,9 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
       return;
     }
 
-    // Todos los slots están llenos y aún hay tiempo → comprobamos
     handleComprobarResultado();
   }, [slotsContent, tiempoRestante, juegoTerminado]);
 
-  /**
-   * Cuando el tiempo llega a 0 y el juego actual no se ha completado correctamente,
-   * mostramos el overlay de tiempo agotado.
-   */
   useEffect(() => {
     if (tiempoRestante === 0 && !juegoTerminado && !juegoActualCompletado) {
       setOverlayTiempoAgotado(true);
@@ -558,8 +499,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     }
   }, [tiempoRestante, juegoTerminado, juegoActualCompletado]);
 
-  // Cuando se muestra el overlay de victoria, esperamos 7 segundos
-  // y luego cerramos el overlay y avanzamos al siguiente juego.
   useEffect(() => {
     if (!overlayFinJuego.abierto) return;
 
@@ -570,8 +509,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     return () => window.clearTimeout(timeoutId);
   }, [overlayFinJuego.abierto]);
 
-  // Cuando se muestra el overlay de tiempo agotado, esperamos 7 segundos
-  // y luego cerramos el overlay y avanzamos al siguiente juego.
   useEffect(() => {
     if (!overlayTiempoAgotado) return;
 
@@ -582,48 +519,38 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     return () => window.clearTimeout(timeoutId);
   }, [overlayTiempoAgotado]);
 
-  // Información de lo que se está "arrastrando"
   const dragInfoRef = useRef<{
     source: "options" | "slot";
     index: number;
   } | null>(null);
 
-  // Vista previa del elemento que se arrastra con touch
   const [touchPreview, setTouchPreview] = useState<{
     text: string;
     x: number;
     y: number;
   } | null>(null);
 
-  // Ref al contenedor general para manejar el touchend
   const juegoContainerRef = useRef<HTMLDivElement | null>(null);
   const dragPreviewRef = useRef<HTMLDivElement | null>(null);
 
-  /* ===================== LÓGICA DE DROP REUTILIZABLE ===================== */
-
-  // Aplica la lógica de soltar sobre un slot (desktop o touch)
   const dropOnSlot = (slotIndex: number) => {
-    // Si ya terminó el nivel o se acabó el tiempo, no permitimos más movimientos
     if (juegoTerminado || tiempoRestante <= 0) return;
 
     const info = dragInfoRef.current;
     if (!info) return;
 
-    // Desde la lista de pasos hacia un slot
     if (info.source === "options") {
       const bloque = bloquesDesordenados[info.index];
       if (!bloque) return;
 
       const bloquePrevio = slotsContent[slotIndex];
 
-      // Actualizar slots
       setSlotsContent((prev) => {
         const newSlots = [...prev];
         newSlots[slotIndex] = bloque;
         return newSlots;
       });
 
-      // Actualizar lista de opciones
       setBloquesDesordenados((prev) => {
         const nuevos = prev.filter((_, i) => i !== info.index);
         if (bloquePrevio) {
@@ -632,15 +559,12 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
         return nuevos;
       });
 
-      // El slot que se acaba de modificar vuelve a su color normal
       setSlotEstados((prev) => {
         const nuevos = [...prev];
         nuevos[slotIndex] = "default";
         return nuevos;
       });
     }
-
-    // Desde otro slot → intercambio
     if (info.source === "slot") {
       const fromIndex = info.index;
       if (fromIndex === slotIndex) return;
@@ -653,7 +577,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
         return newSlots;
       });
 
-      // Al intercambiar, ambos slots vuelven a su color normal
       setSlotEstados((prev) => {
         const nuevos = [...prev];
         nuevos[fromIndex] = "default";
@@ -663,9 +586,7 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     }
   };
 
-  // Aplica la lógica de soltar de un slot a la zona de opciones
   const dropToOptions = () => {
-    // Igual bloqueamos devolver bloques a la lista si no hay tiempo o el nivel terminó
     if (juegoTerminado || tiempoRestante <= 0) return;
 
     const info = dragInfoRef.current;
@@ -683,7 +604,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
 
     setBloquesDesordenados((prev) => [...prev, bloque]);
 
-    // Si el bloque regresó a la lista, el slot vuelve a su color original
     setSlotEstados((prev) => {
       const nuevos = [...prev];
       nuevos[fromIndex] = "default";
@@ -691,100 +611,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     });
   };
 
-  /* ===================== DRAG & DROP DESKTOP (HTML5) ===================== */
-
-  const handleDragStartFromOption = (
-    event: React.DragEvent<HTMLDivElement>,
-    index: number
-  ) => {
-    dragInfoRef.current = { source: "options", index };
-    // Algunos navegadores necesitan setData para que se dispare el drop
-    event.dataTransfer.setData("text/plain", String(index));
-    event.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragStartFromSlot = (
-    event: React.DragEvent<HTMLDivElement>,
-    index: number
-  ) => {
-    if (!slotsContent[index]) return;
-    dragInfoRef.current = { source: "slot", index };
-    event.dataTransfer.setData("text/plain", String(index));
-    event.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragOverSlot = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDropOnSlot = (
-    event: React.DragEvent<HTMLDivElement>,
-    slotIndex: number
-  ) => {
-    event.preventDefault();
-    dropOnSlot(slotIndex);
-    dragInfoRef.current = null;
-  };
-
-  const handleDragOverOptions = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDropToOptions = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    dropToOptions();
-    dragInfoRef.current = null;
-  };
-
-  /* ===================== SOPORTE TOUCH (MÓVIL) ===================== */
-
-  const handleTouchStartFromOption = (
-    event: React.TouchEvent<HTMLDivElement>,
-    index: number
-  ) => {
-    dragInfoRef.current = { source: "options", index };
-
-    const touches = event.touches;
-    if (!touches || touches.length === 0) return;
-
-    const touch = touches[0];
-    const text = bloquesDesordenados[index];
-
-    if (text) {
-      setTouchPreview({
-        text,
-        x: touch.clientX,
-        y: touch.clientY,
-      });
-    }
-  };
-
-  const handleTouchStartFromSlot = (
-    event: React.TouchEvent<HTMLDivElement>,
-    index: number
-  ) => {
-    if (!slotsContent[index]) return;
-
-    dragInfoRef.current = { source: "slot", index };
-
-    const touches = event.touches;
-    if (!touches || touches.length === 0) return;
-
-    const touch = touches[0];
-    const text = slotsContent[index];
-
-    if (text) {
-      setTouchPreview({
-        text,
-        x: touch.clientX,
-        y: touch.clientY,
-      });
-    }
-  };
-
-  // Se dispara cuando levantamos el dedo en cualquier parte del contenedor del juego
   const handleTouchEndOnContainer = (
     event: React.TouchEvent<HTMLDivElement>
   ) => {
@@ -808,7 +634,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
       return;
     }
 
-    // ¿Se soltó sobre un slot?
     const slotElement = target.closest(
       "[data-slot-index]"
     ) as HTMLElement | null;
@@ -820,7 +645,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
       return;
     }
 
-    // ¿Se soltó sobre la zona de opciones?
     const optionsElement = target.closest(
       "[data-drop-zone='options']"
     ) as HTMLElement | null;
@@ -831,12 +655,9 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
       return;
     }
 
-    // Si no cayó en ningún lado válido, simplemente limpiamos
     dragInfoRef.current = null;
     setTouchPreview(null);
   };
-
-  /* ===================== UTILIDADES ===================== */
 
   const slots = Array.from(
     { length: escenarioActual.bloquesOrdenados.length },
@@ -849,7 +670,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     return `${minutos}:${segs.toString().padStart(2, "0")}`;
   };
 
-  // Mientras se arrastra con el dedo, movemos la vista previa
   const handleTouchMoveOnContainer = (
     event: React.TouchEvent<HTMLDivElement>
   ) => {
@@ -858,10 +678,8 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     const touch = event.touches[0];
     if (!touch) return;
 
-    // Evitamos el scroll mientras se arrastra
     event.preventDefault();
 
-    // 🔹 Movemos el "ghost" manualmente, sin re-renderizar React
     if (dragPreviewRef.current) {
       dragPreviewRef.current.style.transform = `translate3d(${touch.clientX}px, ${touch.clientY}px, 0) translate(-50%, -50%)`;
     }
@@ -870,11 +688,9 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
   const handleClickOption = (index: number) => {
     if (juegoTerminado || tiempoRestante <= 0) return;
 
-    // Si vuelves a hacer clic sobre la misma opción, la deseleccionas
     if (seleccion && seleccion.type === "option" && seleccion.index === index) {
       setSeleccion(null);
     } else {
-      // Seleccionas este paso como origen
       setSeleccion({ type: "option", index });
     }
   };
@@ -884,8 +700,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
 
     const bloqueEnSlot = slotsContent[slotIndex];
 
-    // 🟢 Caso 1: no hay nada seleccionado todavía
-    // Si el slot tiene contenido, lo seleccionamos para moverlo.
     if (!seleccion) {
       if (bloqueEnSlot) {
         setSeleccion({ type: "slot", index: slotIndex });
@@ -893,7 +707,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
       return;
     }
 
-    // 🟢 Caso 2: hay una opción seleccionada => comportamiento actual (opción → slot)
     if (seleccion.type === "option") {
       const optionIndex = seleccion.index;
       const bloque = bloquesDesordenados[optionIndex];
@@ -904,14 +717,12 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
 
       const bloquePrevio = slotsContent[slotIndex];
 
-      // 2.1. Actualizar contenido de slots
       setSlotsContent((prev) => {
         const newSlots = [...prev];
         newSlots[slotIndex] = bloque;
         return newSlots;
       });
 
-      // 2.2. Actualizar lista de opciones
       setBloquesDesordenados((prev) => {
         const nuevos = prev.filter((_, i) => i !== optionIndex);
         if (bloquePrevio) {
@@ -920,29 +731,24 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
         return nuevos;
       });
 
-      // 2.3. Limpiar estado visual de error del slot
       setSlotEstados((prev) => {
         const nuevos = [...prev];
         nuevos[slotIndex] = "default";
         return nuevos;
       });
 
-      // 2.4. Limpiar selección
       setSeleccion(null);
       return;
     }
 
-    // 🟢 Caso 3: hay un slot seleccionado y se hace clic en otro slot => intercambio
     if (seleccion.type === "slot") {
       const fromIndex = seleccion.index;
 
-      // Si haces clic otra vez en el mismo slot, solo deselecciona
       if (fromIndex === slotIndex) {
         setSeleccion(null);
         return;
       }
 
-      // 3.1. Intercambio de contenidos entre slots
       setSlotsContent((prev) => {
         const newSlots = [...prev];
         const tmp = newSlots[fromIndex];
@@ -951,7 +757,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
         return newSlots;
       });
 
-      // 3.2. Ambos slots vuelven a color normal (por si alguno estaba en rojo)
       setSlotEstados((prev) => {
         const nuevos = [...prev];
         nuevos[fromIndex] = "default";
@@ -959,33 +764,24 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
         return nuevos;
       });
 
-      // 3.3. Limpiar selección
       setSeleccion(null);
     }
   };
 
   const reiniciarJuego = () => {
-    // Tomamos siempre el primer escenario que se va a jugar
     const primerEscenario = escenariosSeleccionados[0] || escenarioActual;
 
-    // 1. Estado general del juego
     setJuegoTerminado(false);
     setOverlayResumenFinal(false);
     setOverlayTiempoAgotado(false);
     setOverlayFinJuego({ abierto: false, puntosObtenidos: 0 });
-
-    // Volvemos al primer juego
     setIndiceJuegoActual(0);
-
-    // 2. Tiempo y puntuación
     setTiempoRestante(config.tiempoPorJuego * 60);
     setPuntuacionTotal(0);
     setJuegosCompletados(0);
     setJuegosFallados(0);
     setMensajeResultado(null);
     setJuegoActualCompletado(false);
-
-    // 3. Estado visual y contenido de los slots (IMPORTANTÍSIMO)
     setBloquesDesordenados(shuffleArray(primerEscenario.bloquesOrdenados));
     setSlotsContent(Array(primerEscenario.bloquesOrdenados.length).fill(null));
     setSlotEstados(
@@ -1064,7 +860,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
           </div>
         )}
 
-        {/* Contenedor general del juego: aquí escuchamos el touchend */}
         <div
           className="juego-container"
           ref={juegoContainerRef}
@@ -1100,10 +895,8 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
             </div>
 
             <div className="flowchart-container">
-              {/* Inicio */}
               <div className="flow-node flow-node-start">Inicio</div>
 
-              {/* Bloques intermedios dinámicos */}
               {slots.map((index) => (
                 <React.Fragment key={index}>
                   <div className="flow-arrow">
@@ -1133,7 +926,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
                 </React.Fragment>
               ))}
 
-              {/* Overlay de instrucciones */}
               {showInstructions && (
                 <div className="ins-overlay">
                   <div className="ins-card">
@@ -1172,7 +964,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
             </div>
           </div>
 
-          {/* Pasos desordenados */}
           <div className="options">
             <div className="options-title">Pasos</div>
             <div className="options-content">
@@ -1203,7 +994,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
             </div>
           </div>
 
-          {/* Overlay: tiempo agotado (mensaje de error) */}
           {overlayTiempoAgotado && (
             <div className="defeat-overlay">
               <div className="defeat-message">
@@ -1214,7 +1004,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
             </div>
           )}
 
-          {/* Overlay: fin de juego actual (mensaje de felicitaciones) */}
           {overlayFinJuego.abierto && (
             <div className="victory-overlay">
               <div className="victory-message">
@@ -1245,7 +1034,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
             </div>
           )}
 
-          {/* Overlay: resumen final (como en Reorder) */}
           {overlayResumenFinal && (
             <div className="summary-overlay">
               <div className="summary-message">
