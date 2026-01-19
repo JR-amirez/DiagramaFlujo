@@ -9,10 +9,10 @@ android {
 
 apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
-    implementation project(':capacitor-app')
-    implementation project(':capacitor-haptics')
-    implementation project(':capacitor-keyboard')
-    implementation project(':capacitor-status-bar')
+    implementation "com.capacitorjs:app:7.1.0"
+    implementation "com.capacitorjs:haptics:7.0.2"
+    implementation "com.capacitorjs:keyboard:7.0.3"
+    implementation "com.capacitorjs:status-bar:7.0.3"
 
 }
 
