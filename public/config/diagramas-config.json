@@ -1,0 +1,13 @@
+{
+  "nombreApp": "Diagrama",
+  "version": "1.0.0",
+  "fecha": "2025-11-16",
+  "descripcion": "Descripcion del juego educativo",
+  "plataformas": ["Android", "Web"],
+  "nivel": "básico",
+  "diagramasIds": [
+    "ventilador_electrico",
+    "celular_solar",
+    "auto"
+  ]
+}

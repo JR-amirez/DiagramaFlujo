@@ -85,8 +85,55 @@
     color: var(--ion-color-danger) !important;
 }
 
+.instructions-exercises {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    justify-content: space-between;
+    align-items: center;
+    height: 7%;
+}
+
+.instructions-exercises .num-words {
+    text-align: center;
+    font-weight: bold;
+}
+
+.instructions-exercises .rules {
+    text-align: center;
+    font-weight: bold;
+    color: #000;
+    font-weight: bold;
+    animation: pulse 2s ease infinite;
+    grid-column: 1 / -1;
+}
+
+.instructions-exercises .temporizador {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.instructions-exercises .temporizador .icono-tiempo {
+    font-size: 22px;
+    color: var(--dark);
+}
+
+.instructions-exercises .temporizador .tiempo-display {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--dark);
+    font-family: "Courier New", monospace;
+}
+
+.tiempo-critico .tiempo-display {
+    color: var(--ion-color-danger) !important;
+}
+
 .flowchart-content {
-    height: 62%;
+    height: 65%;
     --background: #f1f5f9;
     display: flex;
     flex-direction: column;
@@ -99,7 +146,8 @@
     justify-content: center;
     align-items: center;
     width: 100%;
-    padding: 20px 0 10px 0;
+    padding: 10px 0 10px 0;
+    height: 9%;
 }
 
 .flowchart-title h5 {
@@ -112,15 +160,16 @@
     width: 100%;
     height: fit-content;
     display: flex;
-    justify-content: start;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
     padding: 0 20px;
+    height: 91%;
 }
 
 .flow-node {
-    width: 40%;
-    padding: 10px 24px;
+    width: 50%;
+    padding: 7px 24px;
     border-radius: 999px;
     font-weight: 600;
     text-align: center;
@@ -131,13 +180,13 @@
 }
 
 .flow-arrow ion-icon {
-    font-size: 20px;
+    font-size: 16px;
     color: #64748b;
 }
 
 .flow-slot {
     width: 100%;
-    min-height: 54px;
+    min-height: 50px;
     background: #f8fafc;
     border-radius: 5px;
     border: 2px dashed #cbd5e1;
@@ -159,6 +208,10 @@
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
+}
+
+.flow-slot-selected[draggable="true"] .flow-slot-inner {
+    color: #000;
 }
 
 .flow-slot-selected[draggable="true"]:active {
@@ -195,7 +248,6 @@
 
 .flow-slot-parallelogram .flow-slot-inner {
     transform: skewX(10deg);
-    /* corrige el texto para que quede recto */
 }
 
 .flow-slot-rect {
@@ -203,7 +255,10 @@
 }
 
 .options {
-    height: 30%;
+    height: 35%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .options-title {
@@ -211,21 +266,22 @@
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 25%;
+    height: 18%;
     margin: 0;
     text-align: center;
     font-weight: bold;
-    padding-top: 15px;
 }
 
 .options-content {
-    height: 75%;
+    height: 82%;
+    width: 100%;
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
     border-radius: 25px;
     overflow: hidden;
     padding: 15px;
     gap: 10px;
     background: #80808015;
+    border: 0.1px solid rgba(0, 0, 0, 0.2);
 }
 
 .option-card {
@@ -273,8 +329,7 @@
 
 .juego-container {
     width: 100%;
-    height: 88%;
-    padding: 0 16px 16px 16px;
+    height: 74%;
     touch-action: auto;
 }
 
@@ -715,7 +770,7 @@
     --border-width: 2px;
 }
 
-ion-icon{
+ion-icon {
     --ionicon-stroke-width: 50px;
 }
 
@@ -766,7 +821,6 @@ ion-icon{
 }
 
 .button {
-    margin-top: 5px;
     padding: 5px;
     display: flex;
     justify-content: center;
@@ -924,4 +978,21 @@ ion-icon{
         0 1px 0 #fff, 0 -1px 0 #fff,
         1px 1px 0 #fff, -1px 1px 0 #fff,
         1px -1px 0 #fff, -1px -1px 0 #fff;
+}
+
+.button.game {
+    padding: 10px 0 0 0;
+    height: 7%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 0;
+}
+
+.button.game ion-button {
+    margin: 0 !important;
+    padding: 0;
+    animation: none;
+    --background: var(--color-primary);
 }

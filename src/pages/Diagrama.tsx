@@ -5,7 +5,6 @@ import {
   IonIcon,
   IonPage,
   IonPopover,
-  IonTitle,
   IonItem,
   IonButton,
   IonBadge,
@@ -318,9 +317,8 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
 
   type DiagramaRuntimeConfig = {
     nivel?: string;
+    diagramasIds?: string[];
     diagramas?: DiagramaJSON[];
-    tiempo?: number;
-    ejercicios?: number; // se interpreta como número de diagramas/juegos
     autor?: string;
     version?: string;
     fecha?: string; // YYYY-MM-DD
@@ -344,6 +342,9 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
   const [diagramasFromJson, setDiagramasFromJson] = useState<EscenarioFlujo[]>(
     [],
   );
+  const [diagramasIdsFromJson, setDiagramasIdsFromJson] = useState<
+    ProblematicaFlujoId[]
+  >([]);
   const [tiempoFromJson, setTiempoFromJson] = useState<number | null>(null);
 
   const formatPlataforma = (texto: string): string => {
@@ -396,26 +397,19 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
 
   const [showStartScreen, setShowStartScreen] = useState<boolean>(true);
   const [showInformation, setShowInformation] = useState<boolean>(false);
-
   const [countdown, setCountdown] = useState<number>(5);
   const [showCountdown, setShowCountdown] = useState<boolean>(false);
-
   const [pausado, setPausado] = useState<boolean>(false);
-
   const [showInstructions, setShowInstructions] = useState<boolean>(false);
   const [indiceJuegoActual, setIndiceJuegoActual] = useState(0);
-
   const [nivelConfig, setNivelConfig] = useState<string>(nivel);
   const nivelConfigKey = normalizarNivelConfig(nivelConfig);
   const config = configuracionNiveles[nivelConfigKey];
-
   const [numJuegosConfig, setNumJuegosConfig] = useState<number>(
     configuracionNiveles[nivelConfigKey].numeroJuegos,
   );
   const [numJuegosFromJson, setNumJuegosFromJson] = useState<boolean>(false);
-
   const [tiempoRestante, setTiempoRestante] = useState(() => {
-    // Si hay tiempo del JSON, usarlo; sino usar el del nivel
     return tiempoFromJson !== null
       ? tiempoFromJson
       : config.tiempoPorJuego * 60;
@@ -441,24 +435,33 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
   const [overlayResumenFinal, setOverlayResumenFinal] =
     useState<boolean>(false);
 
-  // Usar diagramas del JSON si existen, sino usar los del diccionario por nivel
+  const todosLosEscenarios: EscenarioFlujo[] = [
+    ...diccionarioFlujo.basico,
+    ...diccionarioFlujo.intermedio,
+    ...diccionarioFlujo.avanzado,
+  ];
+
   const escenariosNivelBase =
     diagramasFromJson.length > 0
       ? diagramasFromJson
       : diccionarioFlujo[nivelConfigKey];
 
-  // Si hay diagramas del JSON, usarlos directamente (ignorar problematicas del prop)
-  // Solo usar problematicas si NO hay diagramas del JSON
   const escenariosSeleccionados: EscenarioFlujo[] =
     diagramasFromJson.length > 0
       ? diagramasFromJson
-      : problematicas && problematicas.length > 0
-        ? problematicas
+      : diagramasIdsFromJson.length > 0
+        ? diagramasIdsFromJson
             .map((id) =>
-              escenariosNivelBase.find((escenario) => escenario.id === id),
+              todosLosEscenarios.find((escenario) => escenario.id === id),
             )
             .filter((escenario): escenario is EscenarioFlujo => !!escenario)
-        : escenariosNivelBase.slice(0, numJuegosConfig);
+        : problematicas && problematicas.length > 0
+          ? problematicas
+              .map((id) =>
+                escenariosNivelBase.find((escenario) => escenario.id === id),
+              )
+              .filter((escenario): escenario is EscenarioFlujo => !!escenario)
+          : escenariosNivelBase.slice(0, numJuegosConfig);
 
   const totalJuegos = escenariosSeleccionados.length || 1;
 
@@ -500,7 +503,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
         if (data.fecha) setAppFecha(formatearFechaLarga(data.fecha));
         if (data.descripcion) setAppDescripcion(data.descripcion);
 
-        // Manejo de plataformas (puede ser string o array)
         if (data.plataformas) {
           if (Array.isArray(data.plataformas)) {
             setAppPlataformas(data.plataformas.join(", "));
@@ -509,11 +511,9 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
           }
         }
 
-        // Prioridad: nombreApp > nombreJuego
         if (data.nombreApp) setAppNombreJuego(data.nombreApp);
         else if (data.nombreJuego) setAppNombreJuego(data.nombreJuego);
 
-        // Cargar diagramas personalizados del JSON
         if (
           data.diagramas &&
           Array.isArray(data.diagramas) &&
@@ -530,15 +530,14 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
           setDiagramasFromJson(shuffleArray(diagramasConvertidos));
           setNumJuegosConfig(diagramasConvertidos.length);
           setNumJuegosFromJson(true);
-        } else if (typeof data.ejercicios === "number") {
-          const juegosNormalizados = Math.max(1, Math.round(data.ejercicios));
-          setNumJuegosConfig(juegosNormalizados);
+        } else if (
+          data.diagramasIds &&
+          Array.isArray(data.diagramasIds) &&
+          data.diagramasIds.length > 0
+        ) {
+          setDiagramasIdsFromJson(data.diagramasIds as ProblematicaFlujoId[]);
+          setNumJuegosConfig(data.diagramasIds.length);
           setNumJuegosFromJson(true);
-        }
-
-        // Cargar tiempo personalizado del JSON (en segundos)
-        if (typeof data.tiempo === "number" && data.tiempo > 0) {
-          setTiempoFromJson(data.tiempo);
         }
       } catch (err) {
         console.error("No se pudo cargar diagrama-config.json", err);
@@ -639,7 +638,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     }
 
     setIndiceJuegoActual((prev) => prev + 1);
-    // Usar tiempo del JSON si está disponible, sino usar el del nivel
     const tiempoInicial =
       tiempoFromJson !== null ? tiempoFromJson : config.tiempoPorJuego * 60;
     setTiempoRestante(tiempoInicial);
@@ -654,10 +652,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
   const handleCerrarOverlayTiempoAgotado = () => {
     setOverlayTiempoAgotado(false);
     avanzarAlSiguienteJuego();
-  };
-
-  const handleCerrarOverlayResumenFinal = () => {
-    setOverlayResumenFinal(false);
   };
 
   useEffect(() => {
@@ -956,12 +950,11 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     event.preventDefault();
 
     setTouchPreview((prev) =>
-      prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null
+      prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null,
     );
   };
 
   const handleClickOption = (index: number) => {
-    // Ignorar clicks generados automáticamente después de touch
     if (Date.now() - lastTouchEndRef.current < 300) return;
 
     if (
@@ -984,7 +977,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
   };
 
   const handleClickSlot = (slotIndex: number) => {
-    // Ignorar clicks generados automáticamente después de touch
     if (Date.now() - lastTouchEndRef.current < 300) return;
 
     if (
@@ -1077,7 +1069,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     setOverlayTiempoAgotado(false);
     setOverlayFinJuego({ abierto: false, puntosObtenidos: 0 });
     setIndiceJuegoActual(0);
-    // Usar tiempo del JSON si está disponible, sino usar el del nivel
     const tiempoInicial =
       tiempoFromJson !== null ? tiempoFromJson : config.tiempoPorJuego * 60;
     setTiempoRestante(tiempoInicial);
@@ -1150,7 +1141,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
       return;
     }
 
-    // Cancelamos cualquier arrastre/selección al pausar para evitar estados "pegados"
     setSeleccion(null);
     setTouchPreview(null);
     dragInfoRef.current = null;
@@ -1287,6 +1277,167 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
         </div>
       )}
 
+      {touchPreview && (
+        <div
+          ref={dragPreviewRef}
+          className="drag-preview"
+          style={{
+            transform: `translate3d(${touchPreview.x}px, ${touchPreview.y}px, 0) translate(-50%, -50%)`,
+          }}
+        >
+          <IonCard className="option-card ion-no-margin ion-padding">
+            <IonItem lines="none">
+              <span>{touchPreview.text}</span>
+            </IonItem>
+          </IonCard>
+        </div>
+      )}
+
+      {showInstructions && (
+        <div className="ins-overlay">
+          <div className="ins-card">
+            <div className="ins-title">
+              <h2 style={{ margin: 0, fontWeight: "bold" }}>Reglas Básicas</h2>
+              <IonIcon
+                icon={closeCircleOutline}
+                style={{ fontSize: "26px" }}
+                onClick={() => setShowInstructions(false)}
+              />
+            </div>
+
+            <div className="ins-stats">
+              <p style={{ textAlign: "justify" }}>
+                <strong>
+                  Arrastra las instrucciones al diagrama de flujo en el orden
+                  adecuado.
+                </strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {overlayTiempoAgotado && (
+        <div className="defeat-overlay">
+          <div className="defeat-message">
+            <h2>¡Tiempo agotado! ⏰</h2>
+            <p>No lograste completar el diagrama a tiempo.</p>
+            <p>Pasando al siguiente diagrama...</p>
+          </div>
+        </div>
+      )}
+
+      {overlayFinJuego.abierto && (
+        <div className="victory-overlay">
+          <div className="victory-message">
+            <h2>¡Muy bien! 🎉</h2>
+            <p>Has reconstruido correctamente el diagrama de flujo.</p>
+            <p>
+              <strong>
+                Has ganado +{overlayFinJuego.puntosObtenidos} puntos
+              </strong>
+            </p>
+            <p>Preparando el siguiente diagrama...</p>
+          </div>
+
+          <div className="confetti-container">
+            {generarConfeti().map((particula) => (
+              <div
+                key={particula.id}
+                className="confetti"
+                style={{
+                  backgroundColor: particula.color,
+                  left: `${particula.left}%`,
+                  animationDelay: `${particula.delay}s`,
+                  animationDuration: `${particula.duration}s`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {overlayResumenFinal && (
+        <div className="summary-overlay">
+          <div className="summary-message">
+            {(() => {
+              const total = totalJuegos || 0;
+              const correctas = juegosCompletados;
+              const incorrectas = Math.max(total - correctas, 0);
+              const maxScoreTotal = total * config.puntosPorJuego;
+              const porcentaje =
+                total > 0 ? Math.round((correctas / total) * 100) : 0;
+              const etiqueta =
+                correctas === total
+                  ? "¡PERFECTO! 🏆"
+                  : porcentaje >= 70
+                    ? "¡Excelente! 🔥"
+                    : porcentaje >= 50
+                      ? "¡Buen trabajo! 👍"
+                      : "¡Sigue practicando! 💪";
+
+              return (
+                <>
+                  <h2>Juego Terminado</h2>
+
+                  <div className="resumen-final">
+                    <h3>Resultados Finales</h3>
+
+                    <p>
+                      <strong>Diagramas completados:</strong> {total}
+                    </p>
+
+                    <p>
+                      <strong>Correctos:</strong> {correctas}
+                    </p>
+
+                    <p>
+                      <strong>Incorrectos:</strong> {incorrectas}
+                    </p>
+
+                    <p>
+                      <strong>Puntuación total:</strong> {puntuacionTotal} /{" "}
+                      {maxScoreTotal}
+                    </p>
+
+                    <IonBadge className="badge">{etiqueta}</IonBadge>
+                  </div>
+
+                  <IonButton
+                    id="finalize"
+                    expand="block"
+                    onClick={handleSalirDesdePausa}
+                  >
+                    <IonIcon icon={refresh} slot="start" />
+                    Jugar de Nuevo
+                  </IonButton>
+
+                  <IonButton id="exit" expand="block" onClick={handleExitApp}>
+                    <IonIcon slot="start" icon={exitOutline}></IonIcon>
+                    Cerrar aplicación
+                  </IonButton>
+                </>
+              );
+            })()}
+          </div>
+
+          <div className="confetti-container">
+            {generarConfeti().map((particula) => (
+              <div
+                key={particula.id}
+                className="confetti"
+                style={{
+                  backgroundColor: particula.color,
+                  left: `${particula.left}%`,
+                  animationDelay: `${particula.delay}s`,
+                  animationDuration: `${particula.duration}s`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       <IonContent fullscreen className="ion-padding">
         {showStartScreen ? (
           <div className="inicio-container">
@@ -1365,57 +1516,35 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
                 </span>
               </div>
             </div>
-            {touchPreview && (
-              <div
-                ref={dragPreviewRef}
-                className="drag-preview"
-                style={{
-                  transform: `translate3d(${touchPreview.x}px, ${touchPreview.y}px, 0) translate(-50%, -50%)`,
-                }}
-              >
-                <IonCard className="option-card ion-no-margin ion-padding">
-                  <IonItem lines="none">
-                    <span>{touchPreview.text}</span>
-                  </IonItem>
-                </IonCard>
-              </div>
-            )}
 
-            <div
-              className={`juego-container ${touchPreview ? "dragging" : ""}`}
+            <div className="instructions-exercises">
+              <div className="num-words">
+                <strong>
+                  Juego {indiceJuegoActual + 1} de {totalJuegos}
+                </strong>
+              </div>
+
+              <div className="temporizador">
+                <IonIcon icon={time} className="icono-tiempo" />
+                <h5 className="tiempo-display">
+                  {formatearTiempo(tiempoRestante)}
+                </h5>
+              </div>
+
+              <div className="num-words">
+                <strong>Puntuación: {puntuacionTotal}</strong>
+              </div>
+
+              <div className="rules" onClick={() => setShowInstructions(true)}>
+                Reglas Básicas
+              </div>
+            </div>
+
+            <div className={`juego-container ${touchPreview ? "dragging" : ""}`}
               ref={juegoContainerRef}
               onTouchEnd={handleTouchEndOnContainer}
               onTouchMove={handleTouchMoveOnContainer}
             >
-              <div className="ins-plays">
-                <h5
-                  className="ion-text-center instructions"
-                  onClick={() => setShowInstructions(true)}
-                >
-                  <strong>Reglas Básicas</strong>
-                </h5>
-
-                <div className="num-words">
-                  <strong>
-                    Juego {indiceJuegoActual + 1} de {totalJuegos}
-                  </strong>
-                </div>
-              </div>
-              <div className="info">
-                <div className="pause" onClick={handlePausar}>
-                  <IonIcon slot="start" icon={pauseCircleOutline} />
-                  Pausar
-                </div>
-                <div className="temporizador">
-                  <IonIcon icon={time} className="icono-tiempo" />
-                  <h5 className="tiempo-display">
-                    {formatearTiempo(tiempoRestante)}
-                  </h5>
-                </div>
-                <div className="num-words">
-                  <strong>Puntuación: {puntuacionTotal}</strong>
-                </div>
-              </div>
               <div className="flowchart-content">
                 <div className="flowchart-title">
                   <h5>{escenarioActual.titulo}</h5>
@@ -1490,8 +1619,12 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
                             e.preventDefault();
                             setTouchPreview((prev) =>
                               prev
-                                ? { ...prev, x: touch.clientX, y: touch.clientY }
-                                : null
+                                ? {
+                                    ...prev,
+                                    x: touch.clientX,
+                                    y: touch.clientY,
+                                  }
+                                : null,
                             );
                           }}
                         >
@@ -1502,36 +1635,6 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
                       </React.Fragment>
                     );
                   })}
-
-                  {showInstructions && (
-                    <div className="ins-overlay">
-                      <div className="ins-card">
-                        <div className="ins-title">
-                          <h2 style={{ margin: 0, fontWeight: "bold" }}>
-                            Reglas Básicas
-                          </h2>
-                          <IonIcon
-                            icon={closeCircleOutline}
-                            style={{ fontSize: "26px" }}
-                            onClick={() => setShowInstructions(false)}
-                          />
-                        </div>
-
-                        <div className="ins-stats">
-                          <p style={{ textAlign: "justify" }}>
-                            <strong>
-                              Lee con atención la problemática y ordena las
-                              tarjetas con los pasos correctos, desde el primero
-                              hasta el último. Completa el orden antes de que
-                              termine el tiempo asignado. Cuando creas que el
-                              orden es correcto, pulsa
-                              <em> "Comprobar resultado"</em>.
-                            </strong>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="flow-arrow">
                     <IonIcon icon={arrowDownOutline} />
@@ -1589,7 +1692,7 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
                           setTouchPreview((prev) =>
                             prev
                               ? { ...prev, x: touch.clientX, y: touch.clientY }
-                              : null
+                              : null,
                           );
                         }}
                       >
@@ -1606,140 +1709,21 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
                   })}
                 </div>
               </div>
+            </div>
 
-              {overlayTiempoAgotado && (
-                <div className="defeat-overlay">
-                  <div className="defeat-message">
-                    <h2>¡Tiempo agotado! ⏰</h2>
-                    <p>No lograste completar el diagrama a tiempo.</p>
-                    <p>Pasando al siguiente diagrama...</p>
-                  </div>
-                </div>
-              )}
-
-              {overlayFinJuego.abierto && (
-                <div className="victory-overlay">
-                  <div className="victory-message">
-                    <h2>¡Muy bien! 🎉</h2>
-                    <p>Has reconstruido correctamente el diagrama de flujo.</p>
-                    <p>
-                      <strong>
-                        Has ganado +{overlayFinJuego.puntosObtenidos} puntos
-                      </strong>
-                    </p>
-                    <p>Preparando el siguiente diagrama...</p>
-                  </div>
-
-                  <div className="confetti-container">
-                    {generarConfeti().map((particula) => (
-                      <div
-                        key={particula.id}
-                        className="confetti"
-                        style={{
-                          backgroundColor: particula.color,
-                          left: `${particula.left}%`,
-                          animationDelay: `${particula.delay}s`,
-                          animationDuration: `${particula.duration}s`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {overlayResumenFinal && (
-                <div className="summary-overlay">
-                  <div className="summary-message">
-                    {(() => {
-                      const total = totalJuegos || 0;
-
-                      // "Correctas" = diagramas completados con éxito
-                      const correctas = juegosCompletados;
-
-                      // "Incorrectas" = lo que no se completó (evita negativos por seguridad)
-                      const incorrectas = Math.max(total - correctas, 0);
-
-                      // Puntaje máximo posible (si aciertas todo)
-                      const maxScoreTotal = total * config.puntosPorJuego;
-
-                      // Porcentaje de aciertos para la etiqueta estilo Play
-                      const porcentaje =
-                        total > 0 ? Math.round((correctas / total) * 100) : 0;
-
-                      const etiqueta =
-                        correctas === total
-                          ? "¡PERFECTO! 🏆"
-                          : porcentaje >= 70
-                            ? "¡Excelente! 🔥"
-                            : porcentaje >= 50
-                              ? "¡Buen trabajo! 👍"
-                              : "¡Sigue practicando! 💪";
-
-                      return (
-                        <>
-                          <h2>Juego Terminado</h2>
-
-                          <div className="resumen-final">
-                            <h3>Resultados Finales</h3>
-
-                            <p>
-                              <strong>Diagramas completados:</strong> {total}
-                            </p>
-
-                            <p>
-                              <strong>Correctos:</strong> {correctas}
-                            </p>
-
-                            <p>
-                              <strong>Incorrectos:</strong> {incorrectas}
-                            </p>
-
-                            <p>
-                              <strong>Puntuación total:</strong>{" "}
-                              {puntuacionTotal} / {maxScoreTotal}
-                            </p>
-
-                            <IonBadge className="badge">{etiqueta}</IonBadge>
-                          </div>
-
-                          <IonButton
-                            id="finalize"
-                            expand="block"
-                            onClick={handleSalirDesdePausa}
-                          >
-                            <IonIcon icon={refresh} slot="start" />
-                            Jugar de Nuevo
-                          </IonButton>
-
-                          <IonButton
-                            id="exit"
-                            expand="block"
-                            onClick={handleExitApp}
-                          >
-                            <IonIcon slot="start" icon={exitOutline}></IonIcon>
-                            Cerrar aplicación
-                          </IonButton>
-                        </>
-                      );
-                    })()}
-                  </div>
-
-                  <div className="confetti-container">
-                    {generarConfeti().map((particula) => (
-                      <div
-                        key={particula.id}
-                        className="confetti"
-                        style={{
-                          backgroundColor: particula.color,
-                          left: `${particula.left}%`,
-                          animationDelay: `${particula.delay}s`,
-                          animationDuration: `${particula.duration}s`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+            <div className="button game">
+              <IonButton
+                shape="round"
+                expand="full"
+                onClick={handlePausar}
+                disabled={
+                  showCountdown ||
+                  showInstructions
+                }
+              >
+                <IonIcon slot="start" icon={pauseCircleOutline} />
+                Pausar
+              </IonButton>
             </div>
           </>
         )}
