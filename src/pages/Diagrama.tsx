@@ -282,17 +282,17 @@ const Diagrama: React.FC<OrdenamientoProps> = ({
     basico: {
       numeroJuegos: 3,
       puntosPorJuego: 10,
-      tiempoPorJuego: 3,
+      tiempoPorJuego: 5,
     },
     intermedio: {
       numeroJuegos: 4,
       puntosPorJuego: 15,
-      tiempoPorJuego: 4,
+      tiempoPorJuego: 10,
     },
     avanzado: {
       numeroJuegos: 5,
       puntosPorJuego: 20,
-      tiempoPorJuego: 5,
+      tiempoPorJuego: 15,
     },
   };
 
